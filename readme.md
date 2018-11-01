@@ -3,10 +3,10 @@ A python utility script for generating c or c++ function stubs and other simple 
 
 # actions
 
--generate stub functions
--tabs to spaces
--remove comments
--align characters of consecutive lines
+*generate stub functions
+*tabs to spaces
+*remove comments
+*align characters of consecutive lines
 
 ### test.h output
 ```c++
