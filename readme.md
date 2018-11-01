@@ -6,7 +6,8 @@ A python utility script for generating c or c++ function stubs and other simple 
 - remove comments
 - align characters on consecutive lines
 
-### test.h output
+test.h output
+python -python stub_format.py -generate_stub_functions -i test.h -p
 ```c++
 #include test.h
 
