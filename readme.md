@@ -1,7 +1,14 @@
 # stub-format
 A python utility script for generating c or c++ function stubs and other simple formatting jobs.
 
-### Test.h output
+# actions
+
+-generate stub functions
+-tabs to spaces
+-remove comments
+-align characters of consecutive lines
+
+### test.h output
 ```c++
 #include test.h
 
