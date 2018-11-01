@@ -4,7 +4,7 @@ A python utility script for generating c or c++ function stubs and other simple 
 - generate stub functions
 - tabs to spaces
 - remove comments
-- align characters of consecutive lines
+- align characters on consecutive lines
 
 ### test.h output
 ```c++
