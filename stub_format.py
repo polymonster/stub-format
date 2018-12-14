@@ -150,6 +150,8 @@ def write_function_stub(scope, file_pos, file_data):
     pointer = False
     void = False
     for r in rt_name:
+        if r == "static":
+            continue
         if r == "void" != -1:
             void = True
         if r.find("*") != -1:
@@ -187,7 +189,7 @@ def write_function_stub(scope, file_pos, file_data):
 
     if pointer:
         definition += "    return nullptr;"
-    elif not void:
+    elif not void and len(rt_name) > 0:
         definition += "    return "
         for r in rt_name:
             if r != "const":

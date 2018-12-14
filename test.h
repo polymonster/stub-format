@@ -6,14 +6,16 @@ namespace stub_test
     class my_class
     {
     public:
-        int var; // comments
-        int function_c(int param); // member function
-        const void* function_d() = 0; // test for virtual function
-        
-        int test = int(1); // initialiser
+        static const void* s_function();    // static function to strip static
+        my_class();                         // constructor
+        ~my_class();                        // destructor
+        int var;                            // comments
+        int function_c(int param);          // member function
+        const void* function_d() = 0;       // test for virtual function
+        int test = int(1);                  // initialiser
     private:
     
-        int function_const() const; // const member function
+        int function_const() const;             // const member function
         void (*function_pointer)(int b, int c); // test for function pointer
         
         inline void inline_func()
