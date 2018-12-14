@@ -54,4 +54,6 @@ namespace stub_test
     */ void function_h(int b); // testing code on the same line as end comment
     
     // int commented_out_function_b();
+    
+    void 😎 (int a, int 🕺); // test for utf8
 }
