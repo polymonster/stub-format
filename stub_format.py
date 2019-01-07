@@ -9,9 +9,9 @@ def display_help():
     print("    -o <output file>")
     print("    -w <overwrite input file in place>")
     print("    -p (print result to console)")
-    print("    -generate_stub_functions (generate function stubs from input file")
-    print("    -align_consecutive <char> (align consecutive lines by char)")
-    print("    -tabs_to_spaces <num spaces per tab> (replace tabs with spaces)")
+    print("    -stub (generate function stubs from input file")
+    print("    -align <char> (align consecutive lines by char)")
+    print("    -tabs <num spaces per tab> (replace tabs with spaces)")
     print("    -rm_comments (remove comments)")
     print("    -camel_to_snake (convert camel case to snake case")
     print("    -snake_to_camel (convert snake case to camel case")
@@ -174,6 +174,10 @@ def write_function_stub(scope, file_pos, file_data):
     # args
     argnum = 0
     for a in args:
+        default = a.find("=")
+        if default != -1:
+            a = a[:default]
+            a = a.strip(" ")
         if argnum > 0:
             definition += ", "
         definition += a
@@ -320,18 +324,18 @@ if __name__ == "__main__":
             file_data = file.read()
             file.close()
 
-            if "-tabs_to_spaces" in sys.argv:
+            if "-tabs" in sys.argv:
                 spaces = sys.argv[sys.argv.index("-tabs_to_spaces") + 1]
                 file_data = tabs_to_spaces(file_data, int(spaces))
 
             if "-rm_comments" in sys.argv:
                 file_data = remove_comments(file_data)
 
-            if "-align_consecutive" in sys.argv:
+            if "-align" in sys.argv:
                 align_char = sys.argv[sys.argv.index("-align_consecutive") + 1]
                 file_data = align_consecutive(file_data, align_char)
 
-            if "-generate_stub_functions" in sys.argv:
+            if "-stub" in sys.argv:
                 file_data = generate_stub_functions(file_data, os.path.basename(input_file))
 
             if "-camel_to_snake" in sys.argv:
