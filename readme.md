@@ -11,5 +11,5 @@ A python utility script for generating c or c++ function stubs and other simple 
 Usage:
 
 ```bash
-python stub_format.py -generate_stub_functions -i test.h -p
+python stub_format.py -stub -i test.h -p
 ```
