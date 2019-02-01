@@ -1,3 +1,6 @@
+#ifndef HEADER_H
+#define HEADER_H
+
 namespace stub_test
 {
     const void* function_a(); // function with no args
@@ -57,3 +60,5 @@ namespace stub_test
     
     void 😎 (int a, int 🕺); // test for utf8
 }
+
+#endif

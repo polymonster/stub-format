@@ -307,6 +307,28 @@ def camel_to_snake(file_data):
     return out_data
 
 
+# add a copyright disclaimer to file
+def insert_disclaimer(file_data, filename):
+    disclaimer_template = open("disclaimer.h", "r")
+    disclaimer_template = disclaimer_template.read()
+    disclaimer_template = disclaimer_template.replace("<filename>", os.path.basename(filename))
+    disclaimer_template += file_data
+    return disclaimer_template
+
+
+# conver ifndef header guard to pragma once
+def ifndef_to_pragma_once(file_data):
+    pos = file_data.find("#ifndef")
+    nl = file_data.find("\n", pos)
+    guard = file_data[pos: nl]
+    file_data = file_data.replace(guard, "#pragma once")
+    define = guard.replace("#ifndef", "#define")
+    file_data = file_data.replace(define, "")
+    endif = file_data.rfind("#endif")
+    file_data = file_data[0:endif]
+    return file_data
+
+
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
         display_help()
@@ -343,6 +365,12 @@ if __name__ == "__main__":
 
             if "-snake_to_camel" in sys.argv:
                 file_data = snake_to_camel(file_data)
+
+            if "-disclaimer" in sys.argv:
+                file_data = insert_disclaimer(file_data, input_file)
+
+            if "-pragma_once" in sys.argv:
+                file_data = ifndef_to_pragma_once(file_data)
 
             if "-p" in sys.argv:
                 print(file_data)
