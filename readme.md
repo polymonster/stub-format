@@ -8,7 +8,7 @@ A python utility script for generating c or c++ function stubs and other simple 
 - remove comments
 - align characters on consecutive lines
 - insert a disclaimer at the top of each file
-- replace ifndef header guard with #pragma once
+- replace #ifndef header guard with #pragma once
 
 Usage:
 
