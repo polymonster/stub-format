@@ -13,10 +13,14 @@ def display_help():
     print("    -align <char> (align consecutive lines by char)")
     print("    -tabs <num spaces per tab> (replace tabs with spaces)")
     print("    -rm_comments (remove comments)")
-    print("    -camel_to_snake (convert camel case to snake case")
-    print("    -snake_to_camel (convert snake case to camel case")
+    print("    -camel_to_snake (convert camel case to snake case)")
+    print("    -snake_to_camel (convert snake case to camel case)")
+    print("    -disclaimer (include contents of disclaimer.h at the top of source files)")
+    print("    -pragma_once (replace ifndef header guard with pragma once)")
+    print("    -test_gen (generates code to print input args and return value, for generating test data)")
 
 
+# indent with spaces
 def indent_str(count):
     istr = ""
     for i in range(count):
@@ -55,6 +59,57 @@ def align_consecutive(file_data, align_char):
             alignment_pos = -1
             output += line + "\n"
     return output
+
+
+# find the end of a body text enclosed in brackets
+def enclose_brackets(text):
+    body_pos = text.find("{")
+    bracket_stack = ["{"]
+    text_len = len(text)
+    while len(bracket_stack) > 0 and body_pos < text_len:
+        body_pos += 1
+        character = text[body_pos:body_pos+1]
+        if character == "{":
+            bracket_stack.insert(0, "{")
+        if character == "}" and bracket_stack[0] == "{":
+            bracket_stack.pop(0)
+            body_pos += 1
+    return body_pos
+
+
+# inject prints into source for test gen
+def inject_function_test_gen(file_pos, file_data):
+    ns = len(file_data)
+    nns = min(file_pos + file_data[file_pos:].find(";") + 1, ns)
+    body_start = file_pos + file_data[file_pos:].find("{")
+    be = 0
+    if body_start < nns:
+        args_start = file_pos + file_data[file_pos:].find("(")
+        args_end = args_start + file_data[args_start:].find(")")
+        be = enclose_brackets(file_data[file_pos:])
+
+        # analyse function source
+        prototype = file_data[file_pos:body_start].strip()
+        body = file_data[body_start:file_pos+be].strip(" {}")
+        args = file_data[args_start:args_end].strip(" ()").split(",")
+
+        print(prototype)
+        print("{")
+
+        for a in args:
+            a = a.strip()
+            is_const = a.find("const") != -1
+            is_ref = a.find("&") != -1
+            is_ptr = a.find("*") != -1
+            a = a.replace("&", "")
+            a = a.replace("*", "")
+            al = a.split(" ")
+            name = al[len(al)-1]
+            print("std::cout << " + "\"" + str(a) + " = {\" << " + name + " << \"};\\n\"" + ";")
+
+        print(body)
+        print("}")
+    return be
 
 
 # write function stub from decl
@@ -276,6 +331,24 @@ def generate_stub_functions(file_data, filename):
     return output
 
 
+# create c/c++ test
+def generate_cpp_test(file_data, filename):
+    file_data = tabs_to_spaces(file_data, 4)
+    file_data = remove_comments(file_data)
+    file_pos = 0
+    while True:
+        bpos = file_data[file_pos:].find("(")
+        if bpos != -1:
+            line_pos = file_pos + file_data[file_pos:bpos].rfind("\n")
+            offset = inject_function_test_gen(line_pos, file_data)
+            file_pos += offset
+            if offset == 0:
+                file_pos = file_pos+bpos+1
+        else:
+            break
+    return file_data
+
+
 # snake_case to CamelCase
 def snake_to_camel(file_data):
     num_chars = len(file_data)
@@ -316,7 +389,7 @@ def insert_disclaimer(file_data, filename):
     return disclaimer_template
 
 
-# conver ifndef header guard to pragma once
+# convert header guard to pragma once
 def ifndef_to_pragma_once(file_data):
     pos = file_data.find("#ifndef")
     nl = file_data.find("\n", pos)
@@ -346,15 +419,18 @@ if __name__ == "__main__":
             file_data = file.read()
             file.close()
 
+            if "-test_gen" in sys.argv:
+                file_data = generate_cpp_test(file_data, os.path.basename(input_file))
+
             if "-tabs" in sys.argv:
-                spaces = sys.argv[sys.argv.index("-tabs_to_spaces") + 1]
+                spaces = sys.argv[sys.argv.index("-tabs") + 1]
                 file_data = tabs_to_spaces(file_data, int(spaces))
 
             if "-rm_comments" in sys.argv:
                 file_data = remove_comments(file_data)
 
             if "-align" in sys.argv:
-                align_char = sys.argv[sys.argv.index("-align_consecutive") + 1]
+                align_char = sys.argv[sys.argv.index("-align") + 1]
                 file_data = align_consecutive(file_data, align_char)
 
             if "-stub" in sys.argv:
