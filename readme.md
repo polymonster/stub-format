@@ -13,11 +13,11 @@ A python utility script for generating c or c++ function stubs and other simple 
 
 Usage:
 
-**For best results add stub-format to your path, so you can call it from anywhere.**
-
 ```bash
 stub-format -stub -i test.h -p
 ```
+
+***For best results add stub-format to your path, so you can call it from anywhere.***
 
 
 
