@@ -1,5 +1,5 @@
 # stub-format
-A python utility script for generating c or c++ function stubs and other simple formatting jobs.
+A python utility script for generating c or c++ function stubs and performing other simple formatting and code gen jobs.
 
 - generate stub functions
 - inject code to generate c++ tests
