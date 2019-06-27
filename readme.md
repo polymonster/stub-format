@@ -2,6 +2,7 @@
 A python utility script for generating c or c++ function stubs and other simple formatting jobs.
 
 - generate stub functions
+- inject code to generate c++ tests
 - convert snake case to camel case
 - convert camel case to snake case
 - tabs to spaces
@@ -12,6 +13,11 @@ A python utility script for generating c or c++ function stubs and other simple 
 
 Usage:
 
+**For best results add stub-format to your path, so you can call it from anywhere.
+
 ```bash
-python stub_format.py -stub -i test.h -p
+stub-format -stub -i test.h -p
 ```
+
+
+
