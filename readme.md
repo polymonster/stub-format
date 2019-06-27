@@ -2,7 +2,7 @@
 A python utility script for generating c or c++ function stubs and performing other simple formatting / code gen jobs.
 
 - generate stub functions
-- inject code to generate c++ tests
+- inject c++ code to capture input and output values, useful for generating test data.
 - convert snake case to camel case
 - convert camel case to snake case
 - tabs to spaces
