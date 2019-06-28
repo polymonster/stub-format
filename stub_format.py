@@ -92,10 +92,17 @@ def inject_function_test_gen(file_pos, file_data):
         prototype = file_data[file_pos:body_start].strip()
         body = file_data[body_start:file_pos+be].strip(" {}")
         args = file_data[args_start:args_end].strip(" ()").split(",")
+        fn_name = file_data[:args_start].rfind(" ")
+        rt = file_data[file_pos:fn_name].strip().replace("inline ", "")
+        fn_name = file_data[fn_name:args_start].strip()
 
         print(prototype)
         print("{")
+        print("_test_stack_depth++;")
 
+        print("std::cout << \"begin new test--------------------------------------------------------------------\\n\";")
+        pass_args = ""
+        check_args = []
         for a in args:
             a = a.strip()
             is_const = a.find("const") != -1
@@ -105,9 +112,38 @@ def inject_function_test_gen(file_pos, file_data):
             a = a.replace("*", "")
             al = a.split(" ")
             name = al[len(al)-1]
-            print("std::cout << " + "\"" + str(a) + " = {\" << " + name + " << \"};\\n\"" + ";")
+            if is_ptr or (not is_const and is_ref):
+                print("std::cout << " + "\"" + str(a) + ";\\n\";")
+                check_args.append(name)
+            else:
+                print("std::cout << " + "\"" + str(a) + " = {\" << " + name + " << \"};\\n\";")
+            if len(pass_args) > 0:
+                pass_args += ", "
+            if is_ptr:
+                pass_args += "&"
+            pass_args += str(name)
 
-        print(body)
+        print("std::cout << \"" + rt + " result = " + fn_name + "(" + pass_args + ");\\n\";")
+
+        rp = 0
+        while True:
+            op = rp
+            rp = body[rp:].find("return ")
+            if rp == -1:
+                break;
+            rp = op + rp
+            sc = rp + body[rp:].find(";")
+            rv = body[rp:sc].replace("return ", "")
+            print(body[op:rp])
+            print("{")
+            print("    std::cout << \"require(result,\" << (" + rv + ") << " + "\");\\n\";")
+            for ca in check_args:
+                print("    std::cout << \"require(" + ca + ",\" << (" + ca + ") << " "\");\\n\";")
+            print("    _test_stack_depth--;")
+            print("    " + body[rp:sc] + ";")
+            print("}")
+            rp = sc+1
+        print(body[op:])
         print("}")
     return be
 
@@ -331,6 +367,16 @@ def generate_stub_functions(file_data, filename):
     return output
 
 
+def prev_delim(text):
+    delims = ["\n", ";", "}"]
+    v = len(text)+1
+    for d in delims:
+        vv = text.rfind(d)
+        if vv < v and vv != -1:
+            v = vv
+    return v
+
+
 # create c/c++ test
 def generate_cpp_test(file_data, filename):
     file_data = tabs_to_spaces(file_data, 4)
@@ -339,11 +385,12 @@ def generate_cpp_test(file_data, filename):
     while True:
         bpos = file_data[file_pos:].find("(")
         if bpos != -1:
-            line_pos = file_pos + file_data[file_pos:bpos].rfind("\n")
+            line_pos = file_pos + file_data[file_pos:file_pos+bpos].rfind("\n")
             offset = inject_function_test_gen(line_pos, file_data)
             file_pos += offset
             if offset == 0:
                 file_pos = file_pos+bpos+1
+
         else:
             break
     return file_data
