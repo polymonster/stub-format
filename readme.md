@@ -1,7 +1,8 @@
 # stub-format
-A python utility script for generating c or c++ function stubs and other simple formatting jobs.
+A python utility script for generating c or c++ function stubs and performing other simple formatting / code gen jobs.
 
 - generate stub functions
+- inject c++ code to capture input and output values, useful for generating test data.
 - convert snake case to camel case
 - convert camel case to snake case
 - tabs to spaces
@@ -13,5 +14,10 @@ A python utility script for generating c or c++ function stubs and other simple 
 Usage:
 
 ```bash
-python stub_format.py -stub -i test.h -p
+stub-format -stub -i test.h -p
 ```
+
+***For best results add stub-format to your path, so you can call it from anywhere.***
+
+
+
