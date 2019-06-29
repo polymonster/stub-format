@@ -77,8 +77,14 @@ def enclose_brackets(text):
     return body_pos
 
 
+def add_line(line, output):
+    return output + line + "\n"
+
+def add_line_test(line, output):
+    return output + "if(_test_stack_depth == 1)" + line + "\n"
+
 # inject prints into source for test gen
-def inject_function_test_gen(file_pos, file_data):
+def inject_function_test_gen(file_pos, file_data, output):
     ns = len(file_data)
     nns = min(file_pos + file_data[file_pos:].find(";") + 1, ns)
     body_start = file_pos + file_data[file_pos:].find("{")
@@ -96,11 +102,13 @@ def inject_function_test_gen(file_pos, file_data):
         rt = file_data[file_pos:fn_name].strip().replace("inline ", "")
         fn_name = file_data[fn_name:args_start].strip()
 
-        print(prototype)
-        print("{")
-        print("_test_stack_depth++;")
+        output = add_line(prototype, output)
+        output = add_line("{", output)
+        output = add_line("_test_stack_depth++;", output)
 
-        print("std::cout << \"begin new test--------------------------------------------------------------------\\n\";")
+        output = add_line_test("std::cout << \"{\\n\";", output)
+        output = add_line_test("std::cout << \"    //" + fn_name + "---------------------------\\n\";", output)
+
         pass_args = ""
         check_args = []
         for a in args:
@@ -112,18 +120,21 @@ def inject_function_test_gen(file_pos, file_data):
             a = a.replace("*", "")
             al = a.split(" ")
             name = al[len(al)-1]
-            if is_ptr or (not is_const and is_ref):
-                print("std::cout << " + "\"" + str(a) + ";\\n\";")
+            if not is_const and is_ref:
+                output = add_line_test("std::cout << " + "\"    " + str(a) + " = { 0 };\\n\";", output)
+                check_args.append(name)
+            elif is_ptr:
+                output = add_line_test("std::cout << " + "\"    " + str(a) + ";\\n\";", output)
                 check_args.append(name)
             else:
-                print("std::cout << " + "\"" + str(a) + " = {\" << " + name + " << \"};\\n\";")
+                output = add_line_test("std::cout << " + "\"    " + str(a) + " = {\" << " + name + " << \"};\\n\";", output)
             if len(pass_args) > 0:
                 pass_args += ", "
             if is_ptr:
                 pass_args += "&"
             pass_args += str(name)
 
-        print("std::cout << \"" + rt + " result = " + fn_name + "(" + pass_args + ");\\n\";")
+        output = add_line_test("std::cout << \"    " + rt + " result = " + fn_name + "(" + pass_args + ");\\n\";", output)
 
         rp = 0
         while True:
@@ -134,18 +145,19 @@ def inject_function_test_gen(file_pos, file_data):
             rp = op + rp
             sc = rp + body[rp:].find(";")
             rv = body[rp:sc].replace("return ", "")
-            print(body[op:rp])
-            print("{")
-            print("    std::cout << \"require(result,\" << (" + rv + ") << " + "\");\\n\";")
+            output = add_line(body[op:rp], output)
+            output = add_line("{", output)
+            output = add_line_test("std::cout << \"    REQUIRE(require_func(result," + rt + "(\" << (" + rv + ") << " + "\")));\\n\";", output)
             for ca in check_args:
-                print("    std::cout << \"require(" + ca + ",\" << (" + ca + ") << " "\");\\n\";")
-            print("    _test_stack_depth--;")
-            print("    " + body[rp:sc] + ";")
-            print("}")
+                output = add_line_test("std::cout << \"    REQUIRE(require_func(" + ca + ",{\" << (" + ca + ") << " "\"}));\\n\";", output)
+            output = add_line_test("std::cout << \"}\\n\";", output)
+            output = add_line("\n_test_stack_depth--;", output)
+            output = add_line(body[rp:sc] + ";", output)
+            output = add_line("}", output)
             rp = sc+1
-        print(body[op:])
-        print("}")
-    return be
+        output = add_line(body[op:], output)
+        output = add_line("}", output)
+    return be, output
 
 
 # write function stub from decl
@@ -382,17 +394,27 @@ def generate_cpp_test(file_data, filename):
     file_data = tabs_to_spaces(file_data, 4)
     file_data = remove_comments(file_data)
     file_pos = 0
+    output = ""
     while True:
         bpos = file_data[file_pos:].find("(")
         if bpos != -1:
             line_pos = file_pos + file_data[file_pos:file_pos+bpos].rfind("\n")
-            offset = inject_function_test_gen(line_pos, file_data)
+            offset, output = inject_function_test_gen(line_pos, file_data, output)
             file_pos += offset
             if offset == 0:
                 file_pos = file_pos+bpos+1
 
         else:
             break
+    # format output
+    fmt = ""
+    lines = output.split("\n")
+    for l in lines:
+        l = l.strip()
+        if l == "":
+            continue
+        fmt += l + "\n"
+    print(fmt)
     return file_data
 
 
