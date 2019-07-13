@@ -116,6 +116,10 @@ def inject_function_test_gen(file_pos, file_data, output):
             is_const = a.find("const") != -1
             is_ref = a.find("&") != -1
             is_ptr = a.find("*") != -1
+            is_float = a.find("f32 ") != -1 or a.find("float ") != -1
+            cast = ""
+            if is_float:
+                cast = "(f32)"
             a = a.replace("&", "")
             a = a.replace("*", "")
             al = a.split(" ")
@@ -127,7 +131,7 @@ def inject_function_test_gen(file_pos, file_data, output):
                 output = add_line_test("std::cout << " + "\"    " + str(a) + ";\\n\";", output)
                 check_args.append(name)
             else:
-                output = add_line_test("std::cout << " + "\"    " + str(a) + " = {\" << " + name + " << \"};\\n\";", output)
+                output = add_line_test("std::cout << " + "\"    " + str(a) + " = {" + cast + "\" << " + name + " << \"};\\n\";", output)
             if len(pass_args) > 0:
                 pass_args += ", "
             if is_ptr:
@@ -240,9 +244,13 @@ def write_function_stub(scope, file_pos, file_data):
         name_pos -= 1
 
     # ignore inline function defs
+    # add ovveride for virtual
+    override = False
     for r in rt_name:
         if r == "inline":
             return
+        if r == "virtual":
+            override = True
 
     for i in range(0, len(args)):
         args[i] = args[i].strip(" ")
@@ -289,6 +297,9 @@ def write_function_stub(scope, file_pos, file_data):
 
     # properties
     definition += " " + prop
+    if override:
+        definition += " override "
+
     definition += "\n"
 
     # body
@@ -299,7 +310,7 @@ def write_function_stub(scope, file_pos, file_data):
     elif not void and len(rt_name) > 0:
         definition += "    return "
         for r in rt_name:
-            if r != "const":
+            if r != "const" and r != "virtual":
                 definition += r
         definition += "();"
 
